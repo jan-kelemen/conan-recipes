@@ -147,7 +147,7 @@ class SDLConan(ConanFile):
             if self.options.alsa:
                 self.requires("libalsa/1.2.10")
             if self.options.pulse:
-                self.requires("pulseaudio/14.2")
+                self.requires("pulseaudio/17.0")
             if self.options.opengl:
                 self.requires("opengl/system")
             if self.options.nas:
@@ -259,7 +259,7 @@ class SDLConan(ConanFile):
                 tc.variables["SDL_ESD_SHARED"] = self.options["esd"].shared
             tc.variables["SDL_PULSEAUDIO"] = self.options.pulse
             if self.options.pulse:
-                tc.variables["SDL_PULSEAUDIO_SHARED"] = self.dependencies["pulseaudio"].options.shared
+                tc.variables["SDL_PULSEAUDIO_SHARED"] = True
                 for component in self.dependencies["pulseaudio"].cpp_info.components:
                     if self.dependencies["pulseaudio"].cpp_info.components[component].libs:
                         cmake_extra_libs += self.dependencies["pulseaudio"].cpp_info.components[component].libs
