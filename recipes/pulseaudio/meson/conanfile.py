@@ -101,6 +101,7 @@ class PulseAudioConan(ConanFile):
         tc.project_options['man'] = False
         tc.project_options['doxygen'] = False
         tc.project_options["daemon"] = False
+        tc.project_options['b_lundef'] = False
         tc.generate()
         pkg = PkgConfigDeps(self)
         pkg.generate()
