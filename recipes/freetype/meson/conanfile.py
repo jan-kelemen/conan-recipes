@@ -98,6 +98,8 @@ class FreetypeConan(ConanFile):
         tc.project_options["png"] = feature(self.options.with_png)
         tc.project_options["tests"] = "disabled"
         tc.project_options["zlib"] = "system" if self.options.with_zlib else "disabled"
+        if self.settings.os == "Windows":
+            tc.preprocessor_definitions["_CRT_SECURE_NO_WARNINGS"] = ""
         tc.generate()
 
     def _patch_sources(self):
