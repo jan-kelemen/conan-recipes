@@ -2,7 +2,7 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
-from conan.tools.files import apply_conandata_patches, copy, export_conandata_patches, get
+from conan.tools.files import apply_conandata_patches, copy, export_conandata_patches, get, replace_in_file
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 from conan.tools.scm import Version
 import os
@@ -120,6 +120,15 @@ class JoltPhysicsConan(ConanFile):
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
+        replace_in_file(self, os.path.join(self.source_folder, "Build", "CMakeLists.txt"), 
+            "option(OVERRIDE_CXX_FLAGS \"Override CMAKE_CXX_FLAGS_DEBUG/RELEASE\" ON)", 
+            "")
+        replace_in_file(self, os.path.join(self.source_folder, "Build", "CMakeLists.txt"), 
+            "set(CMAKE_CXX_FLAGS_DEBUG \"/GS /Od /Ob0 /RTC1\")", 
+            "")
+        replace_in_file(self, os.path.join(self.source_folder, "Build", "CMakeLists.txt"), 
+            "set(CMAKE_CXX_FLAGS_RELEASE \"/GS- /Gy /O2 /Oi /Ot\")", 
+            "")
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -145,8 +154,8 @@ class JoltPhysicsConan(ConanFile):
         if self.options.debug_renderer:
             tc.variables["JPH_DEBUG_RENDERER"] = True
         if self.options.disable_allocator:
-            tc.variables["JPH_DISABLE_TEMP_ALLOCATOR"] = True
-            tc.variables["JPH_DISABLE_CUSTOM_ALLOCATOR"] = True
+            tc.preprocessor_definitions["JPH_DISABLE_TEMP_ALLOCATOR"] = None
+            tc.preprocessor_definitions["JPH_DISABLE_CUSTOM_ALLOCATOR"] = None
         tc.variables["PROFILER_IN_DEBUG_AND_RELEASE"] = self.options.profile
         tc.variables["PROFILER_IN_DISTRIBUTION"] = self.options.profile
         if Version(self.version) >= "3.0.0":
