@@ -29,6 +29,9 @@ class JoltPhysicsConan(ConanFile):
         "simd": ["sse", "sse41", "sse42", "avx", "avx2", "avx512"],
         "debug_renderer": [True, False],
         "profile": [True, False],
+        "disable_allocator": [True, False],
+        "floating_point_exceptions": [True, False],
+        "interprocedural_optimization": [True, False]
     }
     default_options = {
         "shared": False,
@@ -36,6 +39,9 @@ class JoltPhysicsConan(ConanFile):
         "simd": "sse42",
         "debug_renderer": False,
         "profile": False,
+        "disable_allocator": False,
+        "floating_point_exceptions": True,
+        "interprocedural_optimization": False
     }
 
     @property
@@ -78,6 +84,8 @@ class JoltPhysicsConan(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
+        else:
+            del self.options.floating_point_exceptions
         if self.settings.arch not in ("x86", "x86_64"):
             del self.options.simd
 
@@ -120,17 +128,27 @@ class JoltPhysicsConan(ConanFile):
         tc.variables["TARGET_PERFORMANCE_TEST"] = False
         tc.variables["TARGET_SAMPLES"] = False
         tc.variables["TARGET_VIEWER"] = False
-        tc.variables["GENERATE_DEBUG_SYMBOLS"] = False
+        if self.settings.build_type in ["Debug", "RelWithDebInfo"]:
+            tc.variables["GENERATE_DEBUG_SYMBOLS"] = True
+        else:
+            tc.variables["GENERATE_DEBUG_SYMBOLS"] = False
         tc.variables["TARGET_UNIT_TESTS"] = False
         tc.variables["USE_SSE4_1"] = self._has_sse41
         tc.variables["USE_SSE4_2"] = self._has_sse42
         tc.variables["USE_AVX"] = self._has_avx
         tc.variables["USE_AVX2"] = self._has_avx2
         tc.variables["USE_AVX512"] = self._has_avx512
+        tc.variables["INTERPROCEDURAL_OPTIMIZATION"] = self.options.interprocedural_optimization
         if is_msvc(self):
             tc.variables["USE_STATIC_MSVC_RUNTIME_LIBRARY"] = is_msvc_static_runtime(self)
-        tc.variables["JPH_DEBUG_RENDERER"] = self.options.debug_renderer
-        tc.variables["JPH_PROFILE_ENABLED"] = self.options.profile
+            tc.variables["FLOATING_POINT_EXCEPTIONS_ENABLED"] = self.options.floating_point_exceptions
+        if self.options.debug_renderer:
+            tc.variables["JPH_DEBUG_RENDERER"] = True
+        if self.options.disable_allocator:
+            tc.variables["JPH_DISABLE_TEMP_ALLOCATOR"] = True
+            tc.variables["JPH_DISABLE_CUSTOM_ALLOCATOR"] = True
+        tc.variables["PROFILER_IN_DEBUG_AND_RELEASE"] = self.options.profile
+        tc.variables["PROFILER_IN_DISTRIBUTION"] = self.options.profile
         if Version(self.version) >= "3.0.0":
             tc.variables["ENABLE_ALL_WARNINGS"] = False
         tc.generate()
@@ -164,3 +182,8 @@ class JoltPhysicsConan(ConanFile):
             self.cpp_info.defines.append("JPH_PROFILE_ENABLED")
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.system_libs.extend(["m", "pthread"])
+        if self.settings.os == "Windows" and self.options.floating_point_exceptions:
+            self.cpp_info.defines.append("JPH_FLOATING_POINT_EXCEPTIONS_ENABLED")
+        if self.options.disable_allocator:
+            self.cpp_info.defines.append("JPH_DISABLE_TEMP_ALLOCATOR")
+            self.cpp_info.defines.append("JPH_DISABLE_CUSTOM_ALLOCATOR")
