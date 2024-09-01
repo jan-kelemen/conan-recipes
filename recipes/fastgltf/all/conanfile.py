@@ -67,7 +67,7 @@ class fastgltf(ConanFile):
         cmake_layout(self, src_folder='src')
 
     def requirements(self):
-        self.requires("simdjson/3.2.0")
+        self.requires("simdjson/3.10.0")
 
     def validate(self):
         if self.settings.get_safe("compiler.cppstd"):
@@ -91,8 +91,12 @@ class fastgltf(ConanFile):
             tc.variables["FASTGLTF_DISABLE_CUSTOM_MEMORY_POOL"] = True
         if self.options.get_safe("use_64bit_float"):
             tc.variables["FASTGLTF_USE_64BIT_FLOAT"] = True
+
+        cppstd = str(self.settings.get_safe("compiler.cppstd"))
         if Version(self.version) >= "0.7.0":
-            tc.variables["FASTGLTF_COMPILE_AS_CPP20"] = "20" in str(self.settings.get_safe("compiler.cppstd"))
+            tc.variables["FASTGLTF_COMPILE_AS_CPP20"] = "20" in cppstd
+        if Version(self.version) >= "0.8.0":
+            tc.variables["FASTGLTF_COMPILE_AS_CPP20"] = ("20" in cppstd) or ("23" in cppstd)
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
@@ -111,5 +115,6 @@ class fastgltf(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["fastgltf"]
-        if "20" in str(self.settings.get_safe("compiler.cppstd")):
+        cppstd = str(self.settings.get_safe("compiler.cppstd"))
+        if ("20" in cppstd) or ("23" in cppstd):
             self.cpp_info.defines.append("FASTGLTF_CPP_20")
