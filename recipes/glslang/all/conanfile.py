@@ -30,6 +30,7 @@ class GlslangConan(ConanFile):
         "spv_remapper": [True, False],
         "hlsl": [True, False],
         "enable_optimizer": [True, False],
+        "enable_spirv": [True, False],
     }
     default_options = {
         "shared": False,
@@ -38,6 +39,7 @@ class GlslangConan(ConanFile):
         "spv_remapper": True,
         "hlsl": True,
         "enable_optimizer": True,
+        "enable_spirv": True,
     }
 
     short_paths = True
@@ -48,6 +50,8 @@ class GlslangConan(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
+        if Version(self.version) < "1.3.296.0":
+            del self.info.options.enable_spirv
 
     def configure(self):
         if self.options.shared:
@@ -75,6 +79,11 @@ class GlslangConan(ConanFile):
                 "because SPIRV-Tools-opt is not built if shared"
             )
 
+        if Version(self.version) >= "1.3.296.0" and self.options.enable_optimizer and not self.options.enable_spirv:
+            raise ConanInvalidConfiguration(
+                f"{self.ref} with enable_optimizer requires enable_spirv"
+            )
+
     def build_requirements(self):
         if Version(self.version) >= "1.3.261":
             self.tool_requires("cmake/[>=3.17.2 <4]")
@@ -88,7 +97,11 @@ class GlslangConan(ConanFile):
 
         tc = CMakeToolchain(self)
         tc.variables["BUILD_EXTERNAL"] = False
-        tc.variables["SKIP_GLSLANG_INSTALL"] = False
+        if Version(self.version) < "1.3.296":
+            tc.variables["SKIP_GLSLANG_INSTALL"] = False
+        else:
+            tc.variables["ENABLE_SPIRV"] = self.options.get_safe("enable_spirv", True)
+            tc.variables["GLSLANG_ENABLE_INSTALL"] = True
         tc.variables["ENABLE_SPVREMAPPER"] = self.options.spv_remapper
         tc.variables["ENABLE_GLSLANG_BINARIES"] = self.options.build_executables
         tc.variables["ENABLE_GLSLANG_JS"] = False
@@ -145,11 +158,6 @@ class GlslangConan(ConanFile):
 
         lib_suffix = "d" if self.settings.os == "Windows" and self.settings.build_type == "Debug" else ""
 
-        has_machineindependent = not self.options.shared
-        has_genericcodegen = not self.options.shared
-        has_osdependent = not self.options.shared
-        has_oglcompiler = not self.options.shared
-
         # glslang
         self.cpp_info.components["glslang-core"].set_property("cmake_target_name", "glslang::glslang")
         self.cpp_info.components["glslang-core"].names["cmake_find_package"] = "glslang"
@@ -159,70 +167,77 @@ class GlslangConan(ConanFile):
             self.cpp_info.components["glslang-core"].defines.append("GLSLANG_IS_SHARED_LIBRARY")
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.components["glslang-core"].system_libs.extend(["m", "pthread"])
-        if has_machineindependent:
-            self.cpp_info.components["glslang-core"].requires.append("machineindependent")
-        if has_genericcodegen:
-            self.cpp_info.components["glslang-core"].requires.append("genericcodegen")
-        if has_osdependent:
-            self.cpp_info.components["glslang-core"].requires.append("osdependent")
-        if has_oglcompiler:
-            self.cpp_info.components["glslang-core"].requires.append("oglcompiler")
-        if self.options.hlsl:
-            self.cpp_info.components["glslang-core"].defines.append("ENABLE_HLSL")
-            self.cpp_info.components["glslang-core"].requires.append("hlsl")
 
-        if has_machineindependent:
-            # MachineIndependent
-            self.cpp_info.components["machineindependent"].set_property("cmake_target_name", "glslang::MachineIndependent")
-            self.cpp_info.components["machineindependent"].names["cmake_find_package"] = "MachineIndependent"
-            self.cpp_info.components["machineindependent"].names["cmake_find_package_multi"] = "MachineIndependent"
-            self.cpp_info.components["machineindependent"].libs = [f"MachineIndependent{lib_suffix}"]
+        if Version(self.version) < "1.3.296":
+            has_machineindependent = not self.options.shared
+            has_genericcodegen = not self.options.shared
+            has_osdependent = not self.options.shared
+            has_oglcompiler = not self.options.shared
+
+            if has_machineindependent:
+                self.cpp_info.components["glslang-core"].requires.append("machineindependent")
             if has_genericcodegen:
-                self.cpp_info.components["machineindependent"].requires.append("genericcodegen")
+                self.cpp_info.components["glslang-core"].requires.append("genericcodegen")
             if has_osdependent:
-                self.cpp_info.components["machineindependent"].requires.append("osdependent")
+                self.cpp_info.components["glslang-core"].requires.append("osdependent")
             if has_oglcompiler:
-                self.cpp_info.components["machineindependent"].requires.append("oglcompiler")
+                self.cpp_info.components["glslang-core"].requires.append("oglcompiler")
+            if self.options.hlsl:
+                self.cpp_info.components["glslang-core"].defines.append("ENABLE_HLSL")
+                self.cpp_info.components["glslang-core"].requires.append("hlsl")
 
-        if has_genericcodegen:
-            # GenericCodeGen
-            self.cpp_info.components["genericcodegen"].set_property("cmake_target_name", "glslang::GenericCodeGen")
-            self.cpp_info.components["genericcodegen"].names["cmake_find_package"] = "GenericCodeGen"
-            self.cpp_info.components["genericcodegen"].names["cmake_find_package_multi"] = "GenericCodeGen"
-            self.cpp_info.components["genericcodegen"].libs = [f"GenericCodeGen{lib_suffix}"]
+            if has_machineindependent:
+                # MachineIndependent
+                self.cpp_info.components["machineindependent"].set_property("cmake_target_name", "glslang::MachineIndependent")
+                self.cpp_info.components["machineindependent"].names["cmake_find_package"] = "MachineIndependent"
+                self.cpp_info.components["machineindependent"].names["cmake_find_package_multi"] = "MachineIndependent"
+                self.cpp_info.components["machineindependent"].libs = [f"MachineIndependent{lib_suffix}"]
+                if has_genericcodegen:
+                    self.cpp_info.components["machineindependent"].requires.append("genericcodegen")
+                if has_osdependent:
+                    self.cpp_info.components["machineindependent"].requires.append("osdependent")
+                if has_oglcompiler:
+                    self.cpp_info.components["machineindependent"].requires.append("oglcompiler")
 
-        if has_osdependent:
-            # OSDependent
-            self.cpp_info.components["osdependent"].set_property("cmake_target_name", "glslang::OSDependent")
-            self.cpp_info.components["osdependent"].names["cmake_find_package"] = "OSDependent"
-            self.cpp_info.components["osdependent"].names["cmake_find_package_multi"] = "OSDependent"
-            self.cpp_info.components["osdependent"].libs = [f"OSDependent{lib_suffix}"]
-            if self.settings.os in ["Linux", "FreeBSD"]:
-                self.cpp_info.components["osdependent"].system_libs.append("pthread")
+            if has_genericcodegen:
+                # GenericCodeGen
+                self.cpp_info.components["genericcodegen"].set_property("cmake_target_name", "glslang::GenericCodeGen")
+                self.cpp_info.components["genericcodegen"].names["cmake_find_package"] = "GenericCodeGen"
+                self.cpp_info.components["genericcodegen"].names["cmake_find_package_multi"] = "GenericCodeGen"
+                self.cpp_info.components["genericcodegen"].libs = [f"GenericCodeGen{lib_suffix}"]
 
-        if has_oglcompiler:
-            # OGLCompiler
-            self.cpp_info.components["oglcompiler"].set_property("cmake_target_name", "glslang::OGLCompiler")
-            self.cpp_info.components["oglcompiler"].names["cmake_find_package"] = "OGLCompiler"
-            self.cpp_info.components["oglcompiler"].names["cmake_find_package_multi"] = "OGLCompiler"
-            self.cpp_info.components["oglcompiler"].libs = [f"OGLCompiler{lib_suffix}"]
+            if has_osdependent:
+                # OSDependent
+                self.cpp_info.components["osdependent"].set_property("cmake_target_name", "glslang::OSDependent")
+                self.cpp_info.components["osdependent"].names["cmake_find_package"] = "OSDependent"
+                self.cpp_info.components["osdependent"].names["cmake_find_package_multi"] = "OSDependent"
+                self.cpp_info.components["osdependent"].libs = [f"OSDependent{lib_suffix}"]
+                if self.settings.os in ["Linux", "FreeBSD"]:
+                    self.cpp_info.components["osdependent"].system_libs.append("pthread")
 
-        # SPIRV
-        self.cpp_info.components["spirv"].set_property("cmake_target_name", "glslang::SPIRV")
-        self.cpp_info.components["spirv"].names["cmake_find_package"] = "SPIRV"
-        self.cpp_info.components["spirv"].names["cmake_find_package_multi"] = "SPIRV"
-        self.cpp_info.components["spirv"].libs = [f"SPIRV{lib_suffix}"]
-        self.cpp_info.components["spirv"].requires = ["glslang-core"]
-        if self.options.enable_optimizer:
-            self.cpp_info.components["spirv"].requires.append("spirv-tools::spirv-tools-opt")
-            self.cpp_info.components["spirv"].defines.append("ENABLE_OPT")
+            if has_oglcompiler:
+                # OGLCompiler
+                self.cpp_info.components["oglcompiler"].set_property("cmake_target_name", "glslang::OGLCompiler")
+                self.cpp_info.components["oglcompiler"].names["cmake_find_package"] = "OGLCompiler"
+                self.cpp_info.components["oglcompiler"].names["cmake_find_package_multi"] = "OGLCompiler"
+                self.cpp_info.components["oglcompiler"].libs = [f"OGLCompiler{lib_suffix}"]
 
-        # HLSL
-        if self.options.hlsl:
-            self.cpp_info.components["hlsl"].set_property("cmake_target_name", "glslang::HLSL")
-            self.cpp_info.components["hlsl"].names["cmake_find_package"] = "HLSL"
-            self.cpp_info.components["hlsl"].names["cmake_find_package_multi"] = "HLSL"
-            self.cpp_info.components["hlsl"].libs = [f"HLSL{lib_suffix}"]
+            # SPIRV
+            self.cpp_info.components["spirv"].set_property("cmake_target_name", "glslang::SPIRV")
+            self.cpp_info.components["spirv"].names["cmake_find_package"] = "SPIRV"
+            self.cpp_info.components["spirv"].names["cmake_find_package_multi"] = "SPIRV"
+            self.cpp_info.components["spirv"].libs = [f"SPIRV{lib_suffix}"]
+            self.cpp_info.components["spirv"].requires = ["glslang-core"]
+            if self.options.enable_optimizer:
+                self.cpp_info.components["spirv"].requires.append("spirv-tools::spirv-tools-opt")
+                self.cpp_info.components["spirv"].defines.append("ENABLE_OPT")
+
+            # HLSL
+            if self.options.hlsl:
+                self.cpp_info.components["hlsl"].set_property("cmake_target_name", "glslang::HLSL")
+                self.cpp_info.components["hlsl"].names["cmake_find_package"] = "HLSL"
+                self.cpp_info.components["hlsl"].names["cmake_find_package_multi"] = "HLSL"
+                self.cpp_info.components["hlsl"].libs = [f"HLSL{lib_suffix}"]
 
         # SPVRemapper
         if self.options.spv_remapper:
