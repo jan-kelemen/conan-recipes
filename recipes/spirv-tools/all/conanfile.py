@@ -108,6 +108,7 @@ class SpirvtoolsConan(ConanFile):
         # There are some switch( ) statements that are causing errors
         # need to turn this off
         tc.variables["SPIRV_WERROR"] = False
+        tc.variables["ENABLE_RTTI"] = True
 
         tc.variables["SKIP_SPIRV_TOOLS_INSTALL"] = False
         tc.variables["SPIRV_LOG_DEBUG"] = False
