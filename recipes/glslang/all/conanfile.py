@@ -224,7 +224,15 @@ class GlslangConan(ConanFile):
                 self.cpp_info.components["oglcompiler"].names["cmake_find_package_multi"] = "OGLCompiler"
                 self.cpp_info.components["oglcompiler"].libs = [f"OGLCompiler{lib_suffix}"]
 
-            # SPIRV
+            # HLSL
+            if self.options.hlsl:
+                self.cpp_info.components["hlsl"].set_property("cmake_target_name", "glslang::HLSL")
+                self.cpp_info.components["hlsl"].names["cmake_find_package"] = "HLSL"
+                self.cpp_info.components["hlsl"].names["cmake_find_package_multi"] = "HLSL"
+                self.cpp_info.components["hlsl"].libs = [f"HLSL{lib_suffix}"]
+
+        # SPIRV
+        if self.options.enable_spirv:
             self.cpp_info.components["spirv"].set_property("cmake_target_name", "glslang::SPIRV")
             self.cpp_info.components["spirv"].names["cmake_find_package"] = "SPIRV"
             self.cpp_info.components["spirv"].names["cmake_find_package_multi"] = "SPIRV"
@@ -233,13 +241,6 @@ class GlslangConan(ConanFile):
             if self.options.enable_optimizer:
                 self.cpp_info.components["spirv"].requires.append("spirv-tools::spirv-tools-opt")
                 self.cpp_info.components["spirv"].defines.append("ENABLE_OPT")
-
-            # HLSL
-            if self.options.hlsl:
-                self.cpp_info.components["hlsl"].set_property("cmake_target_name", "glslang::HLSL")
-                self.cpp_info.components["hlsl"].names["cmake_find_package"] = "HLSL"
-                self.cpp_info.components["hlsl"].names["cmake_find_package_multi"] = "HLSL"
-                self.cpp_info.components["hlsl"].libs = [f"HLSL{lib_suffix}"]
 
         # SPVRemapper
         if self.options.spv_remapper:
