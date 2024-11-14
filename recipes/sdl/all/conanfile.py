@@ -15,10 +15,10 @@ required_conan_version = ">=1.55.0"
 class SDLConan(ConanFile):
     name = "sdl"
     description = "Access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL, Direct3D and Vulkan"
-    topics = ("sdl2", "audio", "keyboard", "graphics", "opengl")
+    license = "Zlib"
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://www.libsdl.org"
-    license = "Zlib"
+    topics = ("sdl2", "audio", "keyboard", "graphics", "opengl")
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -186,8 +186,7 @@ class SDLConan(ConanFile):
             self.build_requires("wayland/1.22.0")  # Provides wayland-scanner
 
     def source(self):
-        get(self, **self.conan_data["sources"][self.version], strip_root=True,
-            destination=self.source_folder)
+        get(self, **self.conan_data["sources"][self.version], strip_root=True)
 
     def _patch_sources(self):
         apply_conandata_patches(self)
@@ -261,7 +260,7 @@ class SDLConan(ConanFile):
                 tc.variables["SDL_ESD_SHARED"] = self.options["esd"].shared
             tc.variables["SDL_PULSEAUDIO"] = self.options.pulse
             if self.options.pulse:
-                tc.variables["SDL_PULSEAUDIO_SHARED"] = True
+                tc.variables["SDL_PULSEAUDIO_SHARED"] = self.dependencies["pulseaudio"].options.shared
                 for component in self.dependencies["pulseaudio"].cpp_info.components:
                     if self.dependencies["pulseaudio"].cpp_info.components[component].libs:
                         cmake_extra_libs += self.dependencies["pulseaudio"].cpp_info.components[component].libs
@@ -416,7 +415,15 @@ class SDLConan(ConanFile):
                 "AVFoundation", "Foundation", "QuartzCore",
             ]
             if self.settings.os == "Macos":
-                self.cpp_info.components["libsdl2"].frameworks.extend(["Cocoa", "Carbon", "IOKit", "ForceFeedback"])
+                self.cpp_info.components["libsdl2"].frameworks.extend([
+                    "Cocoa",
+                    "Carbon",
+                    "IOKit",
+                    "ForceFeedback",
+                    "CoreFoundation",
+                    "CoreServices",
+                    "AppKit"
+                ])
                 self.cpp_info.components["libsdl2"].frameworks.append("GameController")
             elif self.settings.os in ["iOS", "tvOS", "watchOS"]:
                 self.cpp_info.components["libsdl2"].frameworks.extend([
