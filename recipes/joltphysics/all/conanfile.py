@@ -1,13 +1,11 @@
 from conan import ConanFile
-from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
-from conan.tools.files import apply_conandata_patches, copy, export_conandata_patches, get, replace_in_file
+from conan.tools.files import copy, get, rmdir, rm
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
-from conan.tools.scm import Version
 import os
 
-required_conan_version = ">=1.53.0"
+required_conan_version = ">=2.0.9"
 
 
 class JoltPhysicsConan(ConanFile):
@@ -26,144 +24,49 @@ class JoltPhysicsConan(ConanFile):
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
-        "simd": ["sse", "sse41", "sse42", "avx", "avx2", "avx512"],
         "debug_renderer": [True, False],
-        "profile": [True, False],
-        "disable_allocator": [True, False],
-        "floating_point_exceptions": [True, False],
-        "interprocedural_optimization": [True, False]
+        "profiler": [True, False],
     }
     default_options = {
         "shared": False,
         "fPIC": True,
-        "simd": "sse42",
-        "debug_renderer": False,
-        "profile": False,
-        "disable_allocator": False,
-        "floating_point_exceptions": True,
-        "interprocedural_optimization": False
+        "debug_renderer": True,
+        "profiler": False,
     }
-
-    @property
-    def _min_cppstd(self):
-        return "17"
-
-    @property
-    def _compilers_minimum_version(self):
-        return {
-            "Visual Studio": "16",
-            "msvc": "192",
-            "gcc": "9.2", # due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81429
-            "clang": "5",
-            "apple-clang": "12",
-        }
-
-    @property
-    def _has_sse41(self):
-        return self.options.get_safe("simd") in ("sse41", "sse42", "avx", "avx2", "avx512")
-
-    @property
-    def _has_sse42(self):
-        return self.options.get_safe("simd") in ("sse42", "avx", "avx2", "avx512")
-
-    @property
-    def _has_avx(self):
-        return self.options.get_safe("simd") in ("avx", "avx2", "avx512")
-
-    @property
-    def _has_avx2(self):
-        return self.options.get_safe("simd") in ("avx2", "avx512")
-
-    @property
-    def _has_avx512(self):
-        return self.options.get_safe("simd") == "avx512"
-
-    def export_sources(self):
-        export_conandata_patches(self)
-
-    def config_options(self):
-        if self.settings.os == "Windows":
-            del self.options.fPIC
-        else:
-            del self.options.floating_point_exceptions
-        if self.settings.arch not in ("x86", "x86_64"):
-            del self.options.simd
-
-    def configure(self):
-        if self.options.shared:
-            self.options.rm_safe("fPIC")
+    implements = ["auto_shared_fpic"]
 
     def layout(self):
         cmake_layout(self, src_folder="src")
 
     def build_requirements(self):
-        self.tool_requires("cmake/[>=3.16 <4]")
+        self.tool_requires("cmake/[>=3.20 <4]")
 
     def validate(self):
-        if self.settings.compiler.get_safe("cppstd"):
-            check_min_cppstd(self, self._min_cppstd)
-
-        def loose_lt_semver(v1, v2):
-            lv1 = [int(v) for v in v1.split(".")]
-            lv2 = [int(v) for v in v2.split(".")]
-            min_length = min(len(lv1), len(lv2))
-            return lv1[:min_length] < lv2[:min_length]
-
-        minimum_version = self._compilers_minimum_version.get(str(self.settings.compiler), False)
-        if minimum_version and loose_lt_semver(str(self.settings.compiler.version), minimum_version):
-            raise ConanInvalidConfiguration(
-                f"{self.ref} requires C++{self._min_cppstd}, which your compiler does not support.",
-            )
-
-        if is_msvc(self) and self.options.shared:
-            raise ConanInvalidConfiguration(f"{self.ref} shared not supported with Visual Studio")
+        check_min_cppstd(self, 17)
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
-        replace_in_file(self, os.path.join(self.source_folder, "Build", "CMakeLists.txt"), 
-            "option(OVERRIDE_CXX_FLAGS \"Override CMAKE_CXX_FLAGS_DEBUG/RELEASE\" ON)", 
-            "")
-        replace_in_file(self, os.path.join(self.source_folder, "Build", "CMakeLists.txt"), 
-            "set(CMAKE_CXX_FLAGS_DEBUG \"/GS /Od /Ob0 /RTC1\")", 
-            "")
-        replace_in_file(self, os.path.join(self.source_folder, "Build", "CMakeLists.txt"), 
-            "set(CMAKE_CXX_FLAGS_RELEASE \"/GS- /Gy /O2 /Oi /Ot\")", 
-            "")
 
     def generate(self):
         tc = CMakeToolchain(self)
-        tc.variables["TARGET_UNIT_TESTS"] = False
-        tc.variables["TARGET_HELLO_WORLD"] = False
-        tc.variables["TARGET_PERFORMANCE_TEST"] = False
-        tc.variables["TARGET_SAMPLES"] = False
-        tc.variables["TARGET_VIEWER"] = False
-        if self.settings.build_type in ["Debug", "RelWithDebInfo"]:
-            tc.variables["GENERATE_DEBUG_SYMBOLS"] = True
-        else:
-            tc.variables["GENERATE_DEBUG_SYMBOLS"] = False
-        tc.variables["TARGET_UNIT_TESTS"] = False
-        tc.variables["USE_SSE4_1"] = self._has_sse41
-        tc.variables["USE_SSE4_2"] = self._has_sse42
-        tc.variables["USE_AVX"] = self._has_avx
-        tc.variables["USE_AVX2"] = self._has_avx2
-        tc.variables["USE_AVX512"] = self._has_avx512
-        tc.variables["INTERPROCEDURAL_OPTIMIZATION"] = self.options.interprocedural_optimization
+        tc.cache_variables["TARGET_UNIT_TESTS"] = False
+        tc.cache_variables["TARGET_HELLO_WORLD"] = False
+        tc.cache_variables["TARGET_PERFORMANCE_TEST"] = False
+        tc.cache_variables["TARGET_SAMPLES"] = False
+        tc.cache_variables["TARGET_VIEWER"] = False
+        tc.cache_variables["CROSS_PLATFORM_DETERMINISTIC"] = False
+        tc.cache_variables["CPP_RTTI_ENABLED"] = True
+        tc.cache_variables["INTERPROCEDURAL_OPTIMIZATION"] = False
+        tc.cache_variables["GENERATE_DEBUG_SYMBOLS"] = self.settings.build_type in ["Debug", "RelWithDebInfo"]
+        tc.cache_variables["ENABLE_ALL_WARNINGS"] = False
+        tc.cache_variables["OVERRIDE_CXX_FLAGS"] = False
+        tc.cache_variables["DEBUG_RENDERER_IN_DEBUG_AND_RELEASE"] = self.options.debug_renderer
+        tc.cache_variables["PROFILER_IN_DEBUG_AND_RELEASE"] = self.options.profiler
         if is_msvc(self):
-            tc.variables["USE_STATIC_MSVC_RUNTIME_LIBRARY"] = is_msvc_static_runtime(self)
-            tc.variables["FLOATING_POINT_EXCEPTIONS_ENABLED"] = self.options.floating_point_exceptions
-        if self.options.debug_renderer:
-            tc.variables["JPH_DEBUG_RENDERER"] = True
-        if self.options.disable_allocator:
-            tc.preprocessor_definitions["JPH_DISABLE_TEMP_ALLOCATOR"] = None
-            tc.preprocessor_definitions["JPH_DISABLE_CUSTOM_ALLOCATOR"] = None
-        tc.variables["PROFILER_IN_DEBUG_AND_RELEASE"] = self.options.profile
-        tc.variables["PROFILER_IN_DISTRIBUTION"] = self.options.profile
-        if Version(self.version) >= "3.0.0":
-            tc.variables["ENABLE_ALL_WARNINGS"] = False
+            tc.cache_variables["USE_STATIC_MSVC_RUNTIME_LIBRARY"] = is_msvc_static_runtime(self)
         tc.generate()
 
     def build(self):
-        apply_conandata_patches(self)
         cmake = CMake(self)
         cmake.configure(build_script_folder=os.path.join(self.source_folder, "Build"))
         cmake.build()
@@ -172,27 +75,26 @@ class JoltPhysicsConan(ConanFile):
         copy(self, "LICENSE", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
         cmake = CMake(self)
         cmake.install()
+        rmdir(self, os.path.join(self.package_folder, "lib", "cmake"))
+        rm(self, "*.cmake", os.path.join(self.package_folder, "include", "Jolt"))
 
     def package_info(self):
         self.cpp_info.libs = ["Jolt"]
-        if self._has_sse41:
-            self.cpp_info.defines.append("JPH_USE_SSE4_1")
-        if self._has_sse42:
-            self.cpp_info.defines.append("JPH_USE_SSE4_2")
-        if self._has_avx:
-            self.cpp_info.defines.append("JPH_USE_AVX")
-        if self._has_avx2:
-            self.cpp_info.defines.append("JPH_USE_AVX2")
-        if self._has_avx512:
-            self.cpp_info.defines.append("JPH_USE_AVX512")
+        self.cpp_info.set_property("cmake_file_name", "Jolt")
+        self.cpp_info.set_property("cmake_target_name", "Jolt::Jolt")
+        # INFO: The CMake option ENABLE_OBJECT_STREAM is enabled by default and defines JPH_OBJECT_STREAM as public
+        # https://github.com/jrouwe/JoltPhysics/blob/v5.2.0/Build/CMakeLists.txt#L95C8-L95C28
+        self.cpp_info.defines = ["JPH_OBJECT_STREAM"]
+        # INFO: Public defines exposed in include/Jolt/Jolt.cmake
+        # https://github.com/jrouwe/JoltPhysics/blob/v5.2.0/Build/CMakeLists.txt#L51
+        if self.settings.arch in ["x86_64", "x86"]:
+            self.cpp_info.defines.extend(["JPH_USE_AVX2", "JPH_USE_AVX", "JPH_USE_SSE4_1",
+                                          "JPH_USE_SSE4_2", "JPH_USE_LZCNT", "JPH_USE_TZCNT",
+                                          "JPH_USE_F16C", "JPH_USE_FMADD"])
         if self.options.debug_renderer:
             self.cpp_info.defines.append("JPH_DEBUG_RENDERER")
-        if self.options.profile:
+        if self.options.profiler:
             self.cpp_info.defines.append("JPH_PROFILE_ENABLED")
+
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.system_libs.extend(["m", "pthread"])
-        if self.settings.os == "Windows" and self.options.floating_point_exceptions:
-            self.cpp_info.defines.append("JPH_FLOATING_POINT_EXCEPTIONS_ENABLED")
-        if self.options.disable_allocator:
-            self.cpp_info.defines.append("JPH_DISABLE_TEMP_ALLOCATOR")
-            self.cpp_info.defines.append("JPH_DISABLE_CUSTOM_ALLOCATOR")
