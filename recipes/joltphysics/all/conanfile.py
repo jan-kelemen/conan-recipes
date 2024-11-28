@@ -91,8 +91,13 @@ class JoltPhysicsConan(ConanFile):
             self.cpp_info.defines.extend(["JPH_USE_AVX2", "JPH_USE_AVX", "JPH_USE_SSE4_1",
                                           "JPH_USE_SSE4_2", "JPH_USE_LZCNT", "JPH_USE_TZCNT",
                                           "JPH_USE_F16C", "JPH_USE_FMADD"])
+
+        if is_msvc(self):
+            self.cpp_info.defines.append("JPH_FLOATING_POINT_EXCEPTIONS_ENABLED")
+
         if self.options.debug_renderer:
             self.cpp_info.defines.append("JPH_DEBUG_RENDERER")
+
         if self.options.profiler:
             self.cpp_info.defines.append("JPH_PROFILE_ENABLED")
 
