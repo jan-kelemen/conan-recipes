@@ -60,7 +60,9 @@ class JoltPhysicsConan(ConanFile):
         tc.cache_variables["GENERATE_DEBUG_SYMBOLS"] = self.settings.build_type in ["Debug", "RelWithDebInfo"]
         tc.cache_variables["ENABLE_ALL_WARNINGS"] = False
         tc.cache_variables["OVERRIDE_CXX_FLAGS"] = False
+        tc.cache_variables["DEBUG_RENDERER_IN_DISTRIBUTION"] = self.options.debug_renderer
         tc.cache_variables["DEBUG_RENDERER_IN_DEBUG_AND_RELEASE"] = self.options.debug_renderer
+        tc.cache_variables["PROFILER_IN_DISTRIBUTION"] = self.options.profiler
         tc.cache_variables["PROFILER_IN_DEBUG_AND_RELEASE"] = self.options.profiler
         if is_msvc(self):
             tc.cache_variables["USE_STATIC_MSVC_RUNTIME_LIBRARY"] = is_msvc_static_runtime(self)
