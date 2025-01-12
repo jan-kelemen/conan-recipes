@@ -1,7 +1,7 @@
 from conan import ConanFile
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
-from conan.tools.files import copy, get, rmdir, rm
+from conan.tools.files import copy, get, replace_in_file, rmdir, rm
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 import os
 
@@ -68,7 +68,17 @@ class JoltPhysicsConan(ConanFile):
             tc.cache_variables["USE_STATIC_MSVC_RUNTIME_LIBRARY"] = is_msvc_static_runtime(self)
         tc.generate()
 
+    def _patch_sources(self):
+        cmakelists = os.path.join(self.source_folder, "Build", "CMakeLists.txt")
+        replace_in_file(self, cmakelists, "if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR) # Only do this when we're at the top level", "if(0) #")
+
+        jolt = os.path.join(self.source_folder, "Jolt", "Jolt.cmake")
+        replace_in_file(self, jolt,
+            "	target_compile_definitions(Jolt PUBLIC \"$<$<CONFIG:Debug,Release>:JPH_FLOATING_POINT_EXCEPTIONS_ENABLED>\")",
+            "	target_compile_definitions(Jolt PUBLIC \"$<$<CONFIG:Debug,RelWithDebInfo,Release>:JPH_FLOATING_POINT_EXCEPTIONS_ENABLED>\")")
+
     def build(self):
+        self._patch_sources()
         cmake = CMake(self)
         cmake.configure(build_script_folder=os.path.join(self.source_folder, "Build"))
         cmake.build()
