@@ -29,7 +29,7 @@ class SpirvheadersConan(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["SPIRV_HEADERS_SKIP_EXAMPLES"] = True
-        if Version(self.version) >= "1.3.296.0":
+        if Version(self.version) > "1.3.275.0":
             tc.variables["SPIRV_HEADERS_ENABLE_TESTS"] = False
         tc.generate()
 
