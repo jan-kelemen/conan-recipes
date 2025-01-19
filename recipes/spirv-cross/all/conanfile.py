@@ -2,11 +2,11 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import stdcpp_library
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
-from conan.tools.files import apply_conandata_patches, copy, export_conandata_patches, get, rm, rmdir, save
+from conan.tools.files import copy, get, rm, rmdir, save
 import os
 import textwrap
 
-required_conan_version = ">=1.54.0"
+required_conan_version = ">2.0"
 
 
 class SpirvCrossConan(ConanFile):
@@ -48,9 +48,6 @@ class SpirvCrossConan(ConanFile):
         "util": True,
         "namespace": "spirv_cross",
     }
-
-    def export_sources(self):
-        export_conandata_patches(self)
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -99,7 +96,6 @@ class SpirvCrossConan(ConanFile):
         tc.generate()
 
     def build(self):
-        apply_conandata_patches(self)
         cmake = CMake(self)
         cmake.configure()
         cmake.build()

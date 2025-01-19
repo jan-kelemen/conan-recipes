@@ -1,7 +1,7 @@
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.apple import is_apple_os
-from conan.tools.files import apply_conandata_patches, export_conandata_patches, get, replace_in_file, rm, rmdir, copy
+from conan.tools.files import get, replace_in_file, rm, rmdir, copy
 from conan.tools.microsoft import is_msvc
 from conan.tools.scm import Version
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
@@ -9,7 +9,7 @@ from conan.tools.env import Environment
 
 import os
 
-required_conan_version = ">=1.55.0"
+required_conan_version = ">2.0"
 
 
 class SDLConan(ConanFile):
@@ -96,9 +96,6 @@ class SDLConan(ConanFile):
 
         env = env.vars(self, scope="build")
         env.save_script("sdl_env")
-
-    def export_sources(self):
-        export_conandata_patches(self)
 
     def config_options(self):
         # Don't depend on iconv on macOS by default
@@ -189,8 +186,6 @@ class SDLConan(ConanFile):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
 
     def _patch_sources(self):
-        apply_conandata_patches(self)
-
         if Version(self.version) < "2.30.0":
             cmakelists = os.path.join(self.source_folder, "CMakeLists.txt")
             if self.settings.os == "Macos":

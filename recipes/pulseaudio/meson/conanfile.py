@@ -8,7 +8,7 @@ from conan.tools.meson import Meson, MesonToolchain
 from conan.tools.layout import basic_layout
 import os
 
-required_conan_version = ">=1.53.0"
+required_conan_version = ">2.0"
 
 
 class PulseAudioConan(ConanFile):

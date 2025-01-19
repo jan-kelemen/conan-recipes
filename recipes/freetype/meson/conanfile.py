@@ -14,7 +14,7 @@ import re
 import shutil
 import textwrap
 
-required_conan_version = ">=1.53.0"
+required_conan_version = ">2.0"
 
 
 class FreetypeConan(ConanFile):
@@ -243,17 +243,3 @@ class FreetypeConan(ConanFile):
         self.conf_info.define("user.freetype:libtool_version", libtool_version)
         self.cpp_info.set_property("system_package_version", libtool_version)
 
-        # TODO: to remove in conan v2 once cmake_find_package* & pkg_config generators removed
-        self.cpp_info.set_property("component_version", libtool_version)
-        self.cpp_info.filenames["cmake_find_package"] = "Freetype"
-        self.cpp_info.filenames["cmake_find_package_multi"] = "freetype"
-        self.cpp_info.names["cmake_find_package"] = "Freetype"
-        self.cpp_info.names["cmake_find_package_multi"] = "Freetype"
-        self.cpp_info.build_modules["cmake_find_package"] = [self._module_vars_rel_path]
-        self.cpp_info.build_modules["cmake_find_package_multi"] = [self._module_target_rel_path]
-        self.cpp_info.names["pkg_config"] = "freetype2"
-        freetype_config = os.path.join(self.package_folder, "bin", "freetype-config")
-        self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
-        self.env_info.FT2_CONFIG = freetype_config
-        self._chmod_plus_x(freetype_config)
-        self.user_info.LIBTOOL_VERSION = libtool_version

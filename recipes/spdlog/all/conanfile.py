@@ -2,12 +2,12 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
-from conan.tools.files import get, copy, rmdir, replace_in_file, apply_conandata_patches, export_conandata_patches
+from conan.tools.files import get, copy, rmdir, replace_in_file
 from conan.tools.microsoft import check_min_vs, is_msvc, is_msvc_static_runtime
 from conan.tools.scm import Version
 import os
 
-required_conan_version = ">=1.53.0"
+required_conan_version = ">2.0"
 
 
 class SpdlogConan(ConanFile):
@@ -39,9 +39,6 @@ class SpdlogConan(ConanFile):
         "no_exceptions": False,
         "use_std_fmt": False,
     }
-
-    def export_sources(self):
-        export_conandata_patches(self)
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -133,7 +130,6 @@ class SpdlogConan(ConanFile):
 
 
     def _patch_sources(self):
-        apply_conandata_patches(self)
         replace_in_file(self, os.path.join(self.source_folder, "cmake", "utils.cmake"), "/WX", "")
         # This is properly set in later versions
         if self.options.get_safe("use_std_fmt") and Version(self.version) < "1.12":

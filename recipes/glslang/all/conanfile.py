@@ -9,7 +9,7 @@ from conan.tools.env import VirtualBuildEnv
 from conan.tools.files import copy, get, rmdir
 from conan.tools.scm import Version
 
-required_conan_version = ">=1.54.0"
+required_conan_version = ">2.0"
 
 
 class GlslangConan(ConanFile):
@@ -50,8 +50,6 @@ class GlslangConan(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-        if Version(self.version) < "1.3.296.0":
-            del self.info.options.enable_spirv
 
     def configure(self):
         if self.options.shared:
@@ -79,14 +77,13 @@ class GlslangConan(ConanFile):
                 "because SPIRV-Tools-opt is not built if shared"
             )
 
-        if Version(self.version) >= "1.3.296.0" and self.options.enable_optimizer and not self.options.enable_spirv:
+        if self.options.enable_optimizer and not self.options.enable_spirv:
             raise ConanInvalidConfiguration(
                 f"{self.ref} with enable_optimizer requires enable_spirv"
             )
 
     def build_requirements(self):
-        if Version(self.version) >= "1.3.261":
-            self.tool_requires("cmake/[>=3.17.2 <4]")
+        self.tool_requires("cmake/[>=3.17.2 <4]")
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
@@ -97,11 +94,8 @@ class GlslangConan(ConanFile):
 
         tc = CMakeToolchain(self)
         tc.variables["BUILD_EXTERNAL"] = False
-        if Version(self.version) < "1.3.296":
-            tc.variables["SKIP_GLSLANG_INSTALL"] = False
-        else:
-            tc.variables["ENABLE_SPIRV"] = self.options.get_safe("enable_spirv", True)
-            tc.variables["GLSLANG_ENABLE_INSTALL"] = True
+        tc.variables["ENABLE_SPIRV"] = self.options.get_safe("enable_spirv", True)
+        tc.variables["GLSLANG_ENABLE_INSTALL"] = True
         tc.variables["ENABLE_SPVREMAPPER"] = self.options.spv_remapper
         tc.variables["ENABLE_GLSLANG_BINARIES"] = self.options.build_executables
         tc.variables["ENABLE_GLSLANG_JS"] = False
@@ -170,67 +164,6 @@ class GlslangConan(ConanFile):
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.components["glslang-core"].system_libs.extend(["m", "pthread"])
 
-        if Version(self.version) < "1.3.296":
-            has_machineindependent = not self.options.shared
-            has_genericcodegen = not self.options.shared
-            has_osdependent = not self.options.shared
-            has_oglcompiler = not self.options.shared
-
-            if has_machineindependent:
-                self.cpp_info.components["glslang-core"].requires.append("machineindependent")
-            if has_genericcodegen:
-                self.cpp_info.components["glslang-core"].requires.append("genericcodegen")
-            if has_osdependent:
-                self.cpp_info.components["glslang-core"].requires.append("osdependent")
-            if has_oglcompiler:
-                self.cpp_info.components["glslang-core"].requires.append("oglcompiler")
-            if self.options.hlsl:
-                self.cpp_info.components["glslang-core"].defines.append("ENABLE_HLSL")
-                self.cpp_info.components["glslang-core"].requires.append("hlsl")
-
-            if has_machineindependent:
-                # MachineIndependent
-                self.cpp_info.components["machineindependent"].set_property("cmake_target_name", "glslang::MachineIndependent")
-                self.cpp_info.components["machineindependent"].names["cmake_find_package"] = "MachineIndependent"
-                self.cpp_info.components["machineindependent"].names["cmake_find_package_multi"] = "MachineIndependent"
-                self.cpp_info.components["machineindependent"].libs = [f"MachineIndependent{lib_suffix}"]
-                if has_genericcodegen:
-                    self.cpp_info.components["machineindependent"].requires.append("genericcodegen")
-                if has_osdependent:
-                    self.cpp_info.components["machineindependent"].requires.append("osdependent")
-                if has_oglcompiler:
-                    self.cpp_info.components["machineindependent"].requires.append("oglcompiler")
-
-            if has_genericcodegen:
-                # GenericCodeGen
-                self.cpp_info.components["genericcodegen"].set_property("cmake_target_name", "glslang::GenericCodeGen")
-                self.cpp_info.components["genericcodegen"].names["cmake_find_package"] = "GenericCodeGen"
-                self.cpp_info.components["genericcodegen"].names["cmake_find_package_multi"] = "GenericCodeGen"
-                self.cpp_info.components["genericcodegen"].libs = [f"GenericCodeGen{lib_suffix}"]
-
-            if has_osdependent:
-                # OSDependent
-                self.cpp_info.components["osdependent"].set_property("cmake_target_name", "glslang::OSDependent")
-                self.cpp_info.components["osdependent"].names["cmake_find_package"] = "OSDependent"
-                self.cpp_info.components["osdependent"].names["cmake_find_package_multi"] = "OSDependent"
-                self.cpp_info.components["osdependent"].libs = [f"OSDependent{lib_suffix}"]
-                if self.settings.os in ["Linux", "FreeBSD"]:
-                    self.cpp_info.components["osdependent"].system_libs.append("pthread")
-
-            if has_oglcompiler:
-                # OGLCompiler
-                self.cpp_info.components["oglcompiler"].set_property("cmake_target_name", "glslang::OGLCompiler")
-                self.cpp_info.components["oglcompiler"].names["cmake_find_package"] = "OGLCompiler"
-                self.cpp_info.components["oglcompiler"].names["cmake_find_package_multi"] = "OGLCompiler"
-                self.cpp_info.components["oglcompiler"].libs = [f"OGLCompiler{lib_suffix}"]
-
-            # HLSL
-            if self.options.hlsl:
-                self.cpp_info.components["hlsl"].set_property("cmake_target_name", "glslang::HLSL")
-                self.cpp_info.components["hlsl"].names["cmake_find_package"] = "HLSL"
-                self.cpp_info.components["hlsl"].names["cmake_find_package_multi"] = "HLSL"
-                self.cpp_info.components["hlsl"].libs = [f"HLSL{lib_suffix}"]
-
         # SPIRV
         if self.options.enable_spirv:
             self.cpp_info.components["spirv"].set_property("cmake_target_name", "glslang::SPIRV")
@@ -252,8 +185,7 @@ class GlslangConan(ConanFile):
         if self.options.build_executables:
             self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
 
-        if Version(self.version) >= "1.3.243":
-            self.cpp_info.components["glslang-default-resource-limits"].set_property("cmake_target_name", "glslang::glslang-default-resource-limits")
-            self.cpp_info.components["glslang-default-resource-limits"].names["cmake_find_package"] = "glslang-default-resource-limits"
-            self.cpp_info.components["glslang-default-resource-limits"].names["cmake_find_package_multi"] = "glslang-default-resource-limits"
-            self.cpp_info.components["glslang-default-resource-limits"].libs = [f"glslang-default-resource-limits{lib_suffix}"]
+        self.cpp_info.components["glslang-default-resource-limits"].set_property("cmake_target_name", "glslang::glslang-default-resource-limits")
+        self.cpp_info.components["glslang-default-resource-limits"].names["cmake_find_package"] = "glslang-default-resource-limits"
+        self.cpp_info.components["glslang-default-resource-limits"].names["cmake_find_package_multi"] = "glslang-default-resource-limits"
+        self.cpp_info.components["glslang-default-resource-limits"].libs = [f"glslang-default-resource-limits{lib_suffix}"]

@@ -4,7 +4,7 @@ from conan.tools.files import copy, get, replace_in_file, rmdir
 from conan.tools.scm import Version
 import os
 
-required_conan_version = ">=1.53.0"
+required_conan_version = ">2.0"
 
 
 class VolkConan(ConanFile):
@@ -105,7 +105,3 @@ class VolkConan(ConanFile):
         self.cpp_info.components["volk_headers"].requires = ["vulkan-headers::vulkan-headers"]
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.components["volk_headers"].system_libs = ["dl"]
-
-        # TODO: to remove in conan v2 once cmake_find_package* generators removed
-        self.cpp_info.components["libvolk"].names["cmake_find_package"] = "volk"
-        self.cpp_info.components["libvolk"].names["cmake_find_package_multi"] = "volk"

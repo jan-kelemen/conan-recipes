@@ -4,7 +4,7 @@ from conan.tools.files import copy, get, rmdir
 from conan.tools.scm import Version
 import os
 
-required_conan_version = ">=1.50.0"
+required_conan_version = ">2.0"
 
 
 class SpirvheadersConan(ConanFile):
@@ -52,7 +52,3 @@ class SpirvheadersConan(ConanFile):
         self.cpp_info.bindirs = []
         self.cpp_info.libdirs = []
 
-        # TODO: to remove in conan v2 once cmake_find_package* & pkg_config generators removed
-        self.cpp_info.names["cmake_find_package"] = "SPIRV-Headers"
-        self.cpp_info.names["cmake_find_package_multi"] = "SPIRV-Headers"
-        self.cpp_info.names["pkg_config"] = "SPIRV-Headers"

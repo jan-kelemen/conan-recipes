@@ -5,7 +5,7 @@ from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
 import os
 import re
 
-required_conan_version = ">=1.53.0"
+required_conan_version = ">2.0"
 
 
 class IMGUIConan(ConanFile):

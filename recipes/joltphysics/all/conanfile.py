@@ -5,7 +5,7 @@ from conan.tools.files import copy, get, replace_in_file, rmdir, rm
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 import os
 
-required_conan_version = ">=2.0.9"
+required_conan_version = ">2.0"
 
 
 class JoltPhysicsConan(ConanFile):
