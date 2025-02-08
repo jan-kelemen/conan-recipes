@@ -1,4 +1,10 @@
 sources:
+  "1.91.8":
+    url: "https://github.com/ocornut/imgui/archive/v1.91.8.tar.gz"
+    sha256: "db3a2e02bfd6c269adf0968950573053d002f40bdfb9ef2e4a90bce804b0f286"
+  "1.91.8-docking":
+    url: "https://github.com/ocornut/imgui/archive/v1.91.8-docking.tar.gz"
+    sha256: "55f5e65abea635f2a8bfa9a92cd966448a363a262cf6dead7cc662fb0ab37612"
   "1.91.6":
     url: "https://github.com/ocornut/imgui/archive/v1.91.6.tar.gz"
     sha256: "c5fbc5dcab1d46064001c3b84d7a88812985cde7e0e9ced03f5677bec1ba502a"
