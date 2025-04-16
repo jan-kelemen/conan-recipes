@@ -90,6 +90,8 @@ class FreetypeConan(ConanFile):
             return "enabled" if option else "disabled"
 
         tc = MesonToolchain(self)
+        tc.properties["skip_sanity_check"] = True
+        
         tc.project_options["brotli"] = feature(self.options.with_brotli)
         tc.project_options["bzip2"] = feature(self.options.with_bzip2)
         # Harfbuzz support introduces a circular dependency between Harfbuzz and Freetype.
