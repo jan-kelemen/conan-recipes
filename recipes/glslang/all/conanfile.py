@@ -6,7 +6,7 @@ from conan.errors import ConanInvalidConfiguration, ConanException
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.env import VirtualBuildEnv
-from conan.tools.files import copy, get, rmdir
+from conan.tools.files import copy, apply_conandata_patches, get, export_conandata_patches, rmdir
 from conan.tools.scm import Version
 
 required_conan_version = ">2.0"
@@ -45,6 +45,7 @@ class GlslangConan(ConanFile):
     short_paths = True
 
     def export_sources(self):
+        export_conandata_patches(self)
         copy(self, "CMakeLists.txt", self.recipe_folder, self.export_sources_folder)
 
     def config_options(self):
@@ -105,6 +106,7 @@ class GlslangConan(ConanFile):
         tc.variables["ENABLE_EMSCRIPTEN_ENVIRONMENT_NODE"] = False
         tc.variables["ENABLE_HLSL"] = self.options.hlsl
         tc.variables["ENABLE_RTTI"] = True
+        tc.variables["ENABLE_EXCEPTIONS"] = True
         tc.variables["ENABLE_OPT"] = self.options.enable_optimizer
         if self.options.enable_optimizer:
             tc.variables["spirv-tools_SOURCE_DIR"] = self.dependencies["spirv-tools"].package_folder.replace("\\", "/")
@@ -125,6 +127,7 @@ class GlslangConan(ConanFile):
         deps.generate()
 
     def _patch_sources(self):
+        apply_conandata_patches(self)
         for cmake_file in sorted(self.source_path.rglob("CMakeLists.txt")):
             content = cmake_file.read_text(encoding="utf8")
             if "POSITION_INDEPENDENT_CODE ON" in content:
