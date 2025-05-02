@@ -141,6 +141,7 @@ class HarfbuzzConan(ConanFile):
 
         backend, cxxflags = meson_backend_and_flags()
         tc = MesonToolchain(self, backend=backend)
+        tc.properties["skip_sanity_check"] = True
         tc.project_options["auto_features"] = "disabled"
         tc.project_options.update({
             "glib": is_enabled(self.options.with_glib),
@@ -157,6 +158,8 @@ class HarfbuzzConan(ConanFile):
             "icu_builtin": "false"
         })
         tc.cpp_args += cxxflags
+        if self.settings.os == "Windows":
+            tc.preprocessor_definitions["_CRT_SECURE_NO_WARNINGS"] = ""
         tc.generate()
 
     def build(self):
