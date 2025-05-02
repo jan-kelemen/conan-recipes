@@ -41,12 +41,12 @@ class HarfbuzzConan(ConanFile):
         "fPIC": True,
         "with_freetype": True,
         "with_icu": False,
-        "with_glib": True,
-        "with_gdi": True,
-        "with_uniscribe": True,
+        "with_glib": False,
+        "with_gdi": False,
+        "with_uniscribe": False,
         "with_directwrite": False,
         "with_subset": False,
-        "with_coretext": True,
+        "with_coretext": False,
     }
 
     short_paths = True
@@ -80,7 +80,7 @@ class HarfbuzzConan(ConanFile):
 
     def requirements(self):
         if self.options.with_freetype:
-            self.requires("freetype/2.13.2")
+            self.requires("freetype/2.13.3")
         if self.options.with_icu:
             self.requires("icu/74.1")
         if self.options.with_glib:
