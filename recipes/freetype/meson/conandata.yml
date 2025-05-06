@@ -10,3 +10,6 @@ patches:
       patch_description: "meson: define DLL_EXPORT for shared library only"
       patch_source: "https://gitlab.freedesktop.org/freetype/freetype/-/merge_requests/341"
       patch_type: "portability"
+    - patch_file: "patches/2.13.3-0003-meson-Fix-uninitialized-variable.patch"
+      patch_description: "Fix C4703: potentially uninitialized local pointer variable 'ttsize' used"
+      patch_type: "portability"
