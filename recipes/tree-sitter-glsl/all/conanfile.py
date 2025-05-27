@@ -1,10 +1,10 @@
 from conan import ConanFile
-from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
+from conan.tools.cmake import CMake, cmake_layout
 from conan.tools.files import get, copy 
 
 import os
 
-required_conan_version = ">2.0"
+required_conan_version = ">=2.4"
 
 
 class TreeSitterCConan(ConanFile):
@@ -25,28 +25,13 @@ class TreeSitterCConan(ConanFile):
         "shared": False,
         "fPIC": True,
     }
+    implements = ["auto_shared_fpic"]
+    languages = ["C"]
+    exports_sources = "CMakeLists.txt"
+    generators = "CMakeDeps", "CMakeToolchain"
 
     def layout(self):
         cmake_layout(self, src_folder="src")
-
-    def export_sources(self):
-        copy(self, "CMakeLists.txt", src=self.recipe_folder, dst=os.path.join(self.export_sources_folder, "src"))
-
-    def generate(self):
-        tc = CMakeToolchain(self)
-        tc.generate()
-        deps = CMakeDeps(self)
-        deps.generate()
-
-    def config_options(self):
-        if self.settings.os == "Windows":
-            del self.options.fPIC
-
-    def configure(self):
-        if self.options.shared:
-            self.options.rm_safe("fPIC")
-        self.settings.rm_safe("compiler.cppstd")
-        self.settings.rm_safe("compiler.libcxx")
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
@@ -56,7 +41,7 @@ class TreeSitterCConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure(build_script_folder=os.path.join(self.source_folder,  os.pardir))
         cmake.build()
 
     def package(self):
@@ -65,6 +50,12 @@ class TreeSitterCConan(ConanFile):
             "LICENSE",
             src=self.source_folder,
             dst=os.path.join(self.package_folder, "licenses"),
+        )
+        copy(
+            self,
+            "highlights.scm",
+            src=os.path.join(self.source_folder, "queries"),
+            dst=os.path.join(self.package_folder, "queries"),
         )
         cmake = CMake(self)
         cmake.install()
