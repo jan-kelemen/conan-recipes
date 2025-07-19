@@ -22,7 +22,7 @@ class VulkanMemoryAllocatorConan(ConanFile):
         basic_layout(self, src_folder="src")
 
     def requirements(self):
-        self.requires("vulkan-headers/1.4.304.0")
+        self.requires("vulkan-headers/[^1.4]")
 
     def package_id(self):
         self.info.clear()
