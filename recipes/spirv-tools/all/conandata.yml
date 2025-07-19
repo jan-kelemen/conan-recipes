@@ -8,10 +8,14 @@ sources:
     sha256: "ad6e8922538c498e7131bcd82a8d6d9f9863b8d7431c5bfa27dd98e26435be07"
 patches:
   "1.4.321.0":
-    - patch_file: "patches/1.4.304-dont-set-build-type.patch"
+    - patch_file: "patches/1.4.321-dont-set-build-type.patch"
       patch_description: "Don't set build type if CMAKE_BUILD_TYPE is not defined"
       patch_type: "portability"
       sha256: "dc39d069bcd106ef62de4d870a6eb8563202f146543071b39bbf2baa3dc314ca"
+    - patch_file: "patches/1.4.321-whole-program-optimization.patch"
+      patch_description: "Fix compile errors with whole program optimization on MSVC"
+      patch_type: "portability"
+      sha256: "835c87a74b534d50e9d288b20232a179e6bb59b06fdd172dc18670259228cccc"
   "1.4.304.0":
     - patch_file: "patches/1.4.304-whole-program-optimization.patch"
       patch_description: "Fix compile errors with whole program optimization on MSVC"
