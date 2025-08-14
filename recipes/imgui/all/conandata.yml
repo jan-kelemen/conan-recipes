@@ -1,4 +1,7 @@
 sources:
+  "1.92.2b-docking":
+    url: "https://github.com/ocornut/imgui/archive/v1.92.2b-docking.tar.gz"
+    sha256: "f6ad86e6f938fdda4d5e362b9a9b39158963dd3257fdc9902efc148c0c0c39f9"
   "1.92.1-docking":
     url: "https://github.com/ocornut/imgui/archive/v1.92.1-docking.tar.gz"
     sha256: "2f308ae014a8f3a46d89cf4db71c814af815b704b8a88b7136bae148eb8f4b71"
