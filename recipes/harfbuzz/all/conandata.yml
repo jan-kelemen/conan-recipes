@@ -1,13 +1,7 @@
 sources:
+  "11.4.5":
+    url: "https://github.com/harfbuzz/harfbuzz/releases/download/11.4.5/harfbuzz-11.4.5.tar.xz"
+    sha256: "0f052eb4ab01d8bae98ba971c954becb32be57d7250f18af343b1d27892e03fa"
   "11.4.1":
     url: "https://github.com/harfbuzz/harfbuzz/releases/download/11.4.1/harfbuzz-11.4.1.tar.xz"
     sha256: "7aafab93115eb56cdc9a931ab7d19ff60d7f2937b599d140f17236f374e32698"
-  "11.3.2":
-    url: "https://github.com/harfbuzz/harfbuzz/releases/download/11.3.2/harfbuzz-11.3.2.tar.xz"
-    sha256: "d58ada9b2d28821245e8bdb8b94a4e2dad01a08c50d57feb027b32e84c9abfb1"
-patches:
-  "11.3.2":
-    - patch_file: "patches/11.3.2-unary-minus.patch"
-      patch_description: "Fix error C4146: unary minus operator applied to unsigned type, result still unsigned"
-      patch_type: "portability"
-      sha256: "c064204581475af9647234cf645becfaf9af2acdde80487d24844d248f24a2bf"
