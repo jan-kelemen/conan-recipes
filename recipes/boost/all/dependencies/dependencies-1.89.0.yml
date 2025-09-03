@@ -1,6 +1,8 @@
 configure_options:
 - atomic
+- charconv
 - chrono
+- cobalt
 - container
 - context
 - contract
@@ -18,13 +20,13 @@ configure_options:
 - math
 - mpi
 - nowide
+- process
 - program_options
 - python
 - random
 - regex
 - serialization
 - stacktrace
-- system
 - test
 - thread
 - timer
@@ -33,8 +35,13 @@ configure_options:
 - wave
 dependencies:
   atomic: []
-  chrono:
-  - system
+  charconv: []
+  chrono: []
+  cobalt:
+  - container
+  - context
+  cobalt_io:
+  - cobalt
   container: []
   context: []
   contract:
@@ -43,7 +50,6 @@ dependencies:
   coroutine:
   - context
   - exception
-  - system
   date_time: []
   exception: []
   fiber:
@@ -53,7 +59,6 @@ dependencies:
   - fiber
   filesystem:
   - atomic
-  - system
   graph:
   - math
   - random
@@ -70,18 +75,15 @@ dependencies:
   - regex
   json:
   - container
-  - system
   locale:
+  - charconv
   - thread
   log:
   - atomic
-  - container
   - date_time
   - exception
   - filesystem
-  - random
   - regex
-  - system
   - thread
   log_setup:
   - log
@@ -110,10 +112,12 @@ dependencies:
   - python
   prg_exec_monitor:
   - test
+  process:
+  - filesystem
+  - context
   program_options: []
   python: []
-  random:
-  - system
+  random: []
   regex: []
   serialization: []
   stacktrace: []
@@ -123,13 +127,14 @@ dependencies:
   - stacktrace
   stacktrace_basic:
   - stacktrace
+  stacktrace_from_exception:
+  - stacktrace
   stacktrace_noop:
   - stacktrace
   stacktrace_windbg:
   - stacktrace
   stacktrace_windbg_cached:
   - stacktrace
-  system: []
   test:
   - exception
   test_exec_monitor:
@@ -140,18 +145,14 @@ dependencies:
   - container
   - date_time
   - exception
-  - system
-  timer:
-  - chrono
-  - system
+  timer: []
   type_erasure:
   - thread
   unit_test_framework:
   - prg_exec_monitor
   - test
   - test_exec_monitor
-  url:
-  - system
+  url: []
   wave:
   - filesystem
   - serialization
@@ -160,8 +161,14 @@ dependencies:
 libs:
   atomic:
   - boost_atomic
+  charconv:
+  - boost_charconv
   chrono:
   - boost_chrono
+  cobalt:
+  - boost_cobalt
+  cobalt_io:
+  - boost_cobalt_io
   container:
   - boost_container
   context:
@@ -217,6 +224,8 @@ libs:
   - boost_numpy{py_major}{py_minor}
   prg_exec_monitor:
   - boost_prg_exec_monitor
+  process:
+  - boost_process
   program_options:
   - boost_program_options
   python:
@@ -234,14 +243,14 @@ libs:
   - boost_stacktrace_backtrace
   stacktrace_basic:
   - boost_stacktrace_basic
+  stacktrace_from_exception:
+  - boost_stacktrace_from_exception
   stacktrace_noop:
   - boost_stacktrace_noop
   stacktrace_windbg:
   - boost_stacktrace_windbg
   stacktrace_windbg_cached:
   - boost_stacktrace_windbg_cached
-  system:
-  - boost_system
   test: []
   test_exec_monitor:
   - boost_test_exec_monitor
@@ -277,4 +286,4 @@ requirements:
 static_only:
 - boost_exception
 - boost_test_exec_monitor
-version: 1.82.0
+version: 1.89.0
