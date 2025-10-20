@@ -7,7 +7,8 @@ sources:
     sha256: "2d30ba45c4c8ec4de661a1002b4f88d0841ff1a3087f34629275f5436d722109"
 patches:
   "12.1.0":
-    - patch_file: "patches/12.1.0-disable-msvc-warning-4146.patch"
-      patch_description: "Disable warning C4146 for MSVC"
+    - patch_file: "patches/12.1.0-fix-msvc-warning-4146.patch"
+      patch_description: "Fix warning C4146 for MSVC"
       patch_type: "portability"
-      sha256: "d0652444776e5e254018067de241724e5b88a7909f54f5f8a062137bc549c0ba"
+      patch_source: https://github.com/harfbuzz/harfbuzz/commit/07f0cba388cf6690e67d9ffaa3dc3f82281ed38f
+      sha256: "0df181a0b740c791d84d5eb40105df1457a5aa421a28e54b8c10009cba11eac8"
