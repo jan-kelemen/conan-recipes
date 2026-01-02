@@ -31,14 +31,10 @@ class GlmConan(ConanFile):
         pass
 
     def package(self):
-        copy(self, "copying.txt", src=os.path.join(self.source_folder, "glm"), dst=os.path.join(self.package_folder, "licenses"))
+        copy(self, "copying.txt", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
         for headers in ("*.hpp", "*.inl", "*.h", "*.cppm"):
-            if Version(self.version) >= "1.0.2":
-                copy(self, headers, src=os.path.join(self.source_folder, "glm"),
-                                    dst=os.path.join(self.package_folder, "include"))
-            else:
-                copy(self, headers, src=os.path.join(self.source_folder, "glm"),
-                                    dst=os.path.join(self.package_folder, "include", "glm"))
+            copy(self, headers, src=os.path.join(self.source_folder, "glm"),
+                                dst=os.path.join(self.package_folder, "include", "glm"))
 
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "glm")

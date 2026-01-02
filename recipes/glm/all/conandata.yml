@@ -2,6 +2,3 @@ sources:
   "1.0.3":
     url: "https://github.com/g-truc/glm/releases/download/1.0.3/glm-1.0.3.zip"
     sha256: "3a8815d60cce4bd0a40b3a7380dc23c2831470bdcdaea8089ba86a28510d6ee4"
-  "1.0.2":
-    url: "https://github.com/g-truc/glm/releases/download/1.0.2/glm-1.0.2.zip"
-    sha256: "203b64abc82e4d8697cc5aeedc93117fc1ee52d36e7cdcfc0854fa2c607edaae"
